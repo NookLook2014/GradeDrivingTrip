@@ -1,4 +1,4 @@
-from tdrive_etl_utils import load_tdrive_data, load_fuel_truck_dag_data
+from ftruck_etl_utils import load_fuel_truck_dag_data
 from sklearn.cluster import KMeans
 from sklearn.metrics import calinski_harabaz_score,silhouette_samples, silhouette_score
 from keras.models import load_model
@@ -13,6 +13,9 @@ from sklearn import metrics
 freq_model_path = '../bak/encoder_ftruck_freq_dag.model'
 time_model_path = '../bak/encoder_ftruck_time_dag.model'
 
+num_freq_features = 27 * 27
+
+
 def bench_k_means(estimator, name, data, labels):
     t0 = time()
     estimator.fit(data)
@@ -26,10 +29,10 @@ def bench_k_means(estimator, name, data, labels):
              metrics.silhouette_score(data, estimator.labels_, metric='euclidean')))  # the higher the better
 
 
-def cluster_with_only_freq_vector():
+def cluster_with_only_freq_vector(data):
     print(82 * '_')
     print('init\t\ttime\tinertia\thomo\tcompl\tv-meas\tARI\tAMI\tsilhouette')
-    data = load_fuel_truck_dag_data().iloc[:,:9*9*1+1]
+    # data = load_fuel_truck_dag_data().iloc[:,:num_freq_features+1]
     freq_encoder = load_model(freq_model_path)
     # data = data.sample(5000)
     labels = data.iloc[:,0]
@@ -44,11 +47,12 @@ def cluster_with_only_freq_vector():
     # silhouette_avg = silhouette_score(res, cluster_labels)
     # print(input)
 
+
 def visulaize(data, n_digits):
     # #############################################################################
     # Visualize the results on PCA-reduced data
 
-    reduced_data = PCA(n_components=2).fit_transform(data)
+    reduced_data = PCA(n_components=3).fit_transform(data)
     kmeans = KMeans(init='k-means++', n_clusters=n_digits, n_init=10)
     kmeans.fit(reduced_data)
 
@@ -85,6 +89,7 @@ def visulaize(data, n_digits):
     plt.xticks(())
     plt.yticks(())
     plt.show()
+
 
 if __name__ == '__main__':
     data = load_fuel_truck_dag_data(path='D:/data/fueltruck/transformed/dag1/part-00000') #.iloc[:,:9*9*1+1]

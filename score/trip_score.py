@@ -1,4 +1,4 @@
-from tdrive_etl_utils import load_fule_truck_agg_data, load_fule_truck_stats_data
+from ftruck_etl_utils import load_fule_truck_agg_data, load_fule_truck_stats_data
 # from etl_utils import load_tdrive_data, load_fuel_truck_data
 from pca.reduce_by_pca import pca_reduce
 import scipy.stats as st

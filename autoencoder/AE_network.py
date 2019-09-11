@@ -9,7 +9,7 @@ def root_mean_squared_error(y_true, y_pred):
     return K.sqrt(K.mean(K.square(y_pred - y_true)))
 
 
-def deepAE(input_dim, num_hidden1, num_hidden2, encoding_dim, exist_weights_file=None):
+def deepAE(input_dim, num_hidden1, num_hidden2, encoding_dim, optimizer,  exist_weights_file=None):
     '''
     Build a 3-layer(sub) deep encoder-decoder network
     :param input_dim:
@@ -48,6 +48,6 @@ def deepAE(input_dim, num_hidden1, num_hidden2, encoding_dim, exist_weights_file
     # loss = K.mean(reconstruction_loss)
     # autoencoder.add_loss(loss)
     # optimizer = K.optimizers.RMSprop(lr=lr, rho=0.9, epsilon=1e-6)
-    autoencoder.compile(optimizer='adam', loss=losses.binary_crossentropy, metrics=[root_mean_squared_error, 'mse', 'mae'])
+    autoencoder.compile(optimizer=optimizer, loss=losses.binary_crossentropy, metrics=[root_mean_squared_error, 'mse', 'mae'])
     # print(encoder.summary())
     return autoencoder, encoder

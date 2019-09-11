@@ -1,7 +1,8 @@
-from tdrive_etl_utils import load_fule_truck_agg_data, load_fule_truck_stats_data
+from ftruck_etl_utils import load_fule_truck_agg_data, load_fule_truck_stats_data
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import minmax_scale
 import seaborn as sns
+
 
 # ['vid', 'harsh_acc', 'harsh_dec', 'harsh_turn', 'idle', 'over_speed']
 def hist_aggressive_behaviors():
@@ -32,6 +33,7 @@ def hist_aggressive_behaviors():
     plt.ylabel('No. of trips')
     plt.title('Distribution of No.over_speed per 100Km')
     plt.show()
+
 
 def hist_statistics():
     cols = ['vid','meanSpeed', 'stddevSpeed', 'meanRpm', 'stddevRpm',

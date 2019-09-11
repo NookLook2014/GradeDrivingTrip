@@ -3,16 +3,19 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.callbacks import TensorBoard
 
 from autoencoder.AE_network import deepAE
-from tdrive_etl_utils import load_fuel_truck_dag_data
+from ftruck_etl_utils import load_fuel_truck_dag_data
 
 
 def train_ftruck_ae(data, frac_train=0.75, epochs=300, batch_size=28,
-                    num_hidden1 = 2048,
-                    num_hidden2 = 512,
-                    encoding_dim = 10):
+                    num_hidden1 = 512,
+                    num_hidden2 = 256,
+                    encoding_dim = 9,
+                    optimizer='adam'):
     '''
     Train an auto-encoder model given the DAG representation of driving trips,
     the dimension size is 27x27
+    # option 1: rmsprop  binary_crossentropy 256 64 3
+    # option 2: adam     binary_crossentropy 512 256 9
     :param data:
     :param frac_train:
     :param epochs:
@@ -26,13 +29,7 @@ def train_ftruck_ae(data, frac_train=0.75, epochs=300, batch_size=28,
     # data = data  #27*27+  512 64 5
     input_dim = data.shape[1]
 
-    # np.random.shuffle(data)
-    # data = data.reset_index(drop=True)
-    # train_size = int(data.shape[0] * frac_train)
-    # x_train = data[:train_size]
-    # x_test = data[train_size:]
-
-    autoencoder, encoder = deepAE(input_dim, num_hidden1, num_hidden2, encoding_dim)
+    autoencoder, encoder = deepAE(input_dim, num_hidden1, num_hidden2, encoding_dim, optimizer)
     # checkpoint
     # filepath="./ftruck.weights.best.hdf5"
     # checkpoint= ModelCheckpoint(filepath, monitor='val_loss', verbose=0, save_best_only=True, mode='auto')
@@ -57,26 +54,35 @@ def train_ftruck_ae(data, frac_train=0.75, epochs=300, batch_size=28,
     return autoencoder, encoder
 
 
-def model_selection():
-    # option 1: rmsprop  binary_crossentropy 256 64 3
-    # option 2: adam     binary_crossentropy 512 256 9
-    data = load_fuel_truck_dag_data()
-    for encoding_dim in [3, 5, 7, 9]:
-        for num_hidden2 in [28, 64, 128, 256]:  #
-            for num_hidden1 in [128, 256, 512, 1024, 2048]:  #
-                if num_hidden1 > num_hidden2:
-                    print(num_hidden1, num_hidden2, encoding_dim)
-                    autoencoder, encoder = train_ftruck_ae(data,num_hidden1=num_hidden1, num_hidden2=num_hidden2, encoding_dim=encoding_dim)
-                    # autoencoder.save('deepAE_ftruck_freq_dag.model')
-                    # encoder.save('encoder_ftruck_freq_dag.model')
+def model_selection(data):
+    for optimizer in ['rmsprop']: #'adam', 'adadelta',
+        for encoding_dim in [3, 5, 7, 9]:
+            for num_hidden2 in [28, 64, 128, 256]:  #
+                for num_hidden1 in [128, 256, 512, 1024, 2048]:  #
+                    if encoding_dim <= 7:
+                        if num_hidden1 > num_hidden2:
+                            print(optimizer, num_hidden1, num_hidden2, encoding_dim)
+                            autoencoder, encoder = train_ftruck_ae(data, num_hidden1=num_hidden1, num_hidden2=num_hidden2,
+                                                                   encoding_dim=encoding_dim, optimizer=optimizer)
+                            # autoencoder.save('deepAE_ftruck_freq_dag.model')
+                            # encoder.save('encoder_ftruck_freq_dag.model')
 
 
 if __name__ == '__main__':
-    model_selection()
+    data = load_fuel_truck_dag_data().iloc[:,1:]
 
-    # num_states = 27
-    # feature_dim = num_states * num_states
+    # model selection for transit graph (as a whole)
+    # model_selection(data)
 
+    num_states = 27
+    feature_dim = num_states * num_states
+    # model selection for transit frequency graph
+    # print('model selection for transit frequency graph')
+    # model_selection(data.iloc[:, :feature_dim])
+
+    # model selection for transit duration graph
+    print('model selection for transit duration graph')
+    model_selection(data.iloc[:, feature_dim:])
 
     # data = load_fuel_truck_dag_data('D:/data/fueltruck/transformed/dag1/part-00000')
     # print(data.iloc[:,feature_dim+1:].shape)
